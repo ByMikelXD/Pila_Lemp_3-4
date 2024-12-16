@@ -179,3 +179,10 @@ sudo apt-get install -y mariadb-server
 - Una vez realizado ese cambio, crearemos la base de datos, el usuario y los permisos correspondientes para el posterior acceso.
 
 ![image](Fotos/20.png)
+ 
+ ![image](Fotos/21.png)
+
+
+- Para la comprobar que esta funcionando la pagina web, iremos a nuestro navegador escribiremos "localhost:9000".
+
+- Tambien tengo instaldo la pagina de base de datos porque no me funcionaba el wordpress pero al final si lo he solucionado.
