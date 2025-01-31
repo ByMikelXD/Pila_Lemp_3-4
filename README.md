@@ -177,5 +177,5 @@ Para comprobar que la página web está funcionando, abrimos un navegador y acce
 localhost:9000
 ```
 
-Adicionalmente, instalé una página de base de datos debido a un problema inicial con WordPress, el cual finalmente pude solucionar.
+Adicionalmente, instalé una página de base de datos debido a un problema inicial con Ownclound, el cual finalmente pude solucionar.
 
