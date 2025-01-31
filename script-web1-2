@@ -1,6 +1,24 @@
-sudo apt update
-sudo apt upgrade
-sudo apt install -y nginx
-sudo apt install -y php-fpm
-sudo apt install -y php-mysql
-sudo apt install -y default-mysql-client
+sudo apt-get update && sudo apt-get install -y nginx nfs-common php-fpm php-mysql
+sudo mkdir -p /var/nfs/compartida/wordpress
+sudo mount X.X.X.X:/var/nfs/compartir/wordpress /var/nfs/compartida/wordpress
+
+cat <<EOL | sudo tee /etc/nginx/sites-available/wordpress
+server {
+    listen 80;
+    server_name wordpress;
+    root /var/nfs/compartida/wordpress;
+    index index.php index.html index.htm;
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+    location ~ \\.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+EOL
+
+sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/
+sudo systemctl restart nginx
