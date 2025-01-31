@@ -43,7 +43,7 @@ systemctl enable nginx
 - Una vez iniciada la máquina, accederemos al directorio **/etc/nginx/sites-enabled** y crearemos un archivo llamado "balanceador" con el siguiente contenido:
 
 ```nginx
-upstream servidoresweb {
+servidoresweb {
     server (direccion IP de servidor web1);
     server (direccion IP de servidor web2);
 }
