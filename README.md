@@ -1,188 +1,181 @@
 # Pila LEMP de 3/4 Capas - Miguel Cordero González
 
-# Índice
+## Índice
 
 1. [Introducción](#introducción)
-2. [Creación de servidores](#pasos-a-seguir-para-crear-los-servidores)
+2. [Creación de servidores](#creación-de-servidores)
     * [Balanceador](#servidor-balanceador)
-    * [Servidor NFS](#nfs-server)
-    * [Servidores WEB](#servidores-web1-y-web2)
-    * [Servidor BBDD](#ddbb)
+    * [Servidor NFS](#servidor-nfs)
+    * [Servidores Web](#servidores-web1-y-web2)
+    * [Servidor de Base de Datos](#servidor-de-base-de-datos)
 
-# Introducción
+---
 
-En este proyecto, se implementa una pila LEMP y la instalación de WordPress.
+## Introducción
 
-Capa 1: Balanceador.
+En este proyecto se implementa una pila LEMP junto con la instalación de WordPress. La estructura consta de:
 
-Capa 2: WEB1 y WEB2.
+- **Capa 1:** Servidor Balanceador.
+- **Capa 2:** Servidores Web (WEB1 y WEB2), además de una máquina que aloja un servidor NFS y PHP-FPM.
+- **Capa 3:** Servidor de Base de Datos.
 
-Una máquina que aloja un servidor NFS y PHP-FPM.
+La base de datos utilizada es **MariaDB**.
 
-Capa 3: Servidor Base de Datos.
+Los servidores Web1 y Web2 no están accesibles desde una red pública y utilizarán una carpeta compartida proporcionada por NFS.
 
-Se emplea una base de datos MariaDB.
+---
 
-La web 1 y web 2 no están accesibles desde una red pública.
+## Creación de Servidores
 
-Los servidores web utilizarán una carpeta compartida proporcionada por NFS.
+### Servidor Balanceador
 
-# PASOS A SEGUIR PARA CREAR LOS SERVIDORES.
+Para la configuración del balanceador:
 
-## Servidor Balanceador
+- Utilizaremos un aprovisionamiento que permitirá ahorrar tiempo en la configuración. Este proceso incluirá la instalación y configuración de **Nginx**, su arranque y la eliminación de archivos innecesarios.
 
-Para la configuración del balanceador.
-
-- Utilizaremos aprovisionamiento que permitirá ahorrar bastante tiempo en la configuración. Este proceso incluirá Nginx, su arranque y la eliminación de archivos que no son necesarios.
-
- ```
+```bash
 sudo apt update
 sudo apt install -y nginx
-systenctl start nginx
-systemmctl enable nginx
+systemctl start nginx
+systemctl enable nginx
+```
 
- ```
+- Una vez iniciada la máquina, accederemos al directorio **/etc/nginx/sites-enabled** y crearemos un archivo llamado "balanceador" con el siguiente contenido:
 
-- Una vez iniciada la máquina, accederemos al directorio **/etc/nginx/sites-enabled** y crearemos el archivo llamado "balanceador".
-- En este archivo, añadiremos el siguiente código:
-
- ```
+```nginx
 upstream servidoresweb {
-    server (direccion IP de servidor web1)
-    server (direccion IP de servidor web2)
+    server (direccion IP de servidor web1);
+    server (direccion IP de servidor web2);
 }
-	
+
 server {
-    listen      80;
+    listen 80;
     server_name balanceador;
 
     location / {
-	    proxy_redirect      off;
-	    proxy_set_header    X-Real-IP \$remote_addr;
-	    proxy_set_header    X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header    Host \$http_host;
-        proxy_pass          http://servidoresweb;
-	}
+        proxy_redirect off;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_pass http://servidoresweb;
+    }
 }
- ```
-
- ![image](Fotos/1.png)
-
- ![image](Fotos/2.png)
-
-# NFSserver
-
-- Para el servidor nfs, llevaremos a cabo el siguiente aprovisionamiento.
-
 ```
+
+![image](Fotos/1.png)
+![image](Fotos/2.png)
+
+---
+
+### Servidor NFS
+
+Para la configuración del servidor NFS, utilizaremos el siguiente aprovisionamiento:
+
+```bash
 sudo apt update
-sudo apt install -y nfs-kernel-server
-sudo apt install -y nfs-common
-sudo apt install -y php-mysql
-
+sudo apt install -y nfs-kernel-server nfs-common php-mysql
 ```
 
-- Crearemos el siguiente directorio.
+- Crearemos el siguiente directorio:
 
- ![image](Fotos/3.png)
+![image](Fotos/3.png)
 
-- Después, accedemos al archivo /etc/exports y añadimos las siguientes líneas para permitir hacer un mount de las carpetas.
+- Luego, editaremos el archivo **/etc/exports** y añadiremos las siguientes líneas para permitir montar las carpetas:
 
+```bash
+/var/nfs/compartir/wordpress X.X.X.X(rw,sync,no_root_squash,no_subtree_check)
+/var/nfs/compartir/wordpress X.X.X.X(rw,sync,no_root_squash,no_subtree_check)
 ```
-/var/nfs/compartir/wordpress     X.X.X.X(rw,sync,no_root_squash,no_subtree_check)
-/var/nfs/compartir/wordpress     X.X.X.X(rw,sync,no_root_squash,no_subtree_check)
 
-```
+![image](Fotos/4.png)
+![image](Fotos/5.png)
 
- ![image](Fotos/4.png)
+- Accedemos a **/var/nfs/compartir/wordpress** y descargamos WordPress:
 
- ![image](Fotos/5.png)
-
-- Una vez editado, nos vamos a /var/nfs/compartir/wordpress.
-- Descargaremos el siguiente archivo de WordPress.
-
- ```
+```bash
 sudo wget https://wordpress.org/latest.tar.gz
 sudo tar -xzvf latest.tar.gz
-
 ```
 
-- Ahora habilitaremos los puertos de los servidores para evitar problemas con las conexiones nfs.
+- Habilitaremos los puertos de los servidores para evitar problemas con las conexiones NFS:
 
- ![image](Fotos/8.png)
+![image](Fotos/8.png)
 
-- En la carpeta en la que descargamos WordPress, editaremos el archivo (wp-config-sample).
+- Editamos el archivo **wp-config-sample.php** en la carpeta donde descargamos WordPress:
 
- ![image](Fotos/10.png)
+![image](Fotos/10.png)
+![image](Fotos/11.png)
 
- ![image](Fotos/11.png)
+- Finalmente, asignamos los permisos adecuados:
 
-- Ahora le asignaremos los permisos.
+![image](Fotos/12.png)
 
- ![image](Fotos/12.png)
+---
 
-# Servidores WEB1 Y WEB2
+### Servidores Web1 y Web2
 
-- Para los servidores web1 y web2, utilizaremos el siguiente aprovisionamiento.
+Para la configuración de los servidores Web1 y Web2, utilizaremos el siguiente aprovisionamiento:
 
-```
+```bash
 sudo apt-get update
-sudo apt-get install -y nginx
-sudo apt-get install -y nfs-common
-sudo apt-get install -y php-fpm
-sudo apt-get install -y php-msyql
-
+sudo apt-get install -y nginx nfs-common php-fpm php-mysql
 ```
 
+Para montar el directorio creado en el servidor NFS:
 
-- Para montar el directorio anteriormente creado en el NFS.
-
-```
+```bash
 sudo mount X.X.X.X:/var/nfs/compartida/wordpress /var/nfs/compartida/wordpress
 ```
- ![image](Fotos/13.png)
 
- ![image](Fotos/14.png)
+![image](Fotos/13.png)
+![image](Fotos/14.png)
 
- 
-- Ahora iremos al directorio (/etc/nginx/sites-available) y crearemos una copia del archivo "default".
+- Accedemos al directorio **/etc/nginx/sites-available** y creamos una copia del archivo "default":
 
 ![image](Fotos/15.png)
 
-- Modificamos las siguientes líneas.
+- Modificamos las siguientes líneas:
 
 ![image](Fotos/16.png)
+![image](Fotos/17.png)
 
- ![image](Fotos/17.png)
+- Una vez editado el archivo, eliminamos el archivo "default" y dejamos el de WordPress:
 
-
-- Una vez editado el archivo, Borramos el archivo default y dejamos el del wordpress.
-
+```bash
+sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled
 ```
-sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled.
-```
- ![image](Fotos/18.png)
 
-# DDBB
+![image](Fotos/18.png)
 
-- Este será el aprovisionamiento de servidor de datos.
+---
 
-```
+### Servidor de Base de Datos
+
+Para la configuración del servidor de base de datos, utilizaremos el siguiente aprovisionamiento:
+
+```bash
 sudo apt-get update
 sudo apt-get install -y mariadb-server
 ```
 
-- Una vez arranquemos la máquina, iremos al directorio (/etc/mysql/mariadb) y editaremos el archivo "50-server", cambiando en la línea "bind-address".
+- Una vez arrancada la máquina, accedemos al directorio **/etc/mysql/mariadb** y editamos el archivo "50-server.cnf", modificando la línea "bind-address".
 
- ![image](Fotos/19.png)
+![image](Fotos/19.png)
 
-- Una vez realizado ese cambio, crearemos la base de datos, el usuario y los permisos correspondientes para el posterior acceso.
+- Luego, creamos la base de datos, el usuario y asignamos los permisos correspondientes:
 
 ![image](Fotos/20.png)
- 
- ![image](Fotos/21.png)
+![image](Fotos/21.png)
 
+---
 
-- Para la comprobar que esta funcionando la pagina web, iremos a nuestro navegador escribiremos "localhost:9000".
+### Comprobación
 
-- Tambien tengo instaldo la pagina de base de datos porque no me funcionaba el wordpress pero al final si lo he solucionado.
+Para comprobar que la página web está funcionando, abrimos un navegador y accedemos a:
+
+```text
+localhost:9000
+```
+
+Adicionalmente, instalé una página de base de datos debido a un problema inicial con WordPress, el cual finalmente pude solucionar.
+
